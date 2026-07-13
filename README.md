@@ -28,10 +28,10 @@ Requires [uv](https://docs.astral.sh/uv/). Clone, then:
 
 ```bash
 uv sync
-uv run ingest                                        # parse the included archive -> parquet + quality report
-uv run plan --target plans/target_city_10min_v2.json # cue card from the roast history
-uv run design --name my_roast --total 570 --dtr 0.20 # design your own target
-uv run report --target plans/target_city_10min_v2.json --roast <your.alog>
+uv run ingest                                     # parse the included archive -> parquet + quality report
+uv run design --name my_roast --total 600 --dev 105  # constraints -> target curve in plans/
+uv run plan --target plans/target_my_roast.json      # cue card from the roast history
+uv run report --target plans/target_my_roast.json --roast <your.alog>
 ```
 
 Everything works offline from `.alog` files — no hardware needed until you

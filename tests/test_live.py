@@ -14,8 +14,8 @@ from roast_advisor import alog, fakemeter, live
 from roast_advisor.designer import load_target
 from roast_advisor.ms6514 import FrameStream, decode_frame
 
-TARGET = "plans/target_city_10min.json"
-PLAN = "plans/city_10min_dtr22_plan.json"
+TARGET = "tests/fixtures/target_city_10min.json"
+PLAN = "tests/fixtures/city_10min_dtr22_plan.json"
 
 
 # ------------------------------------------------------------- fake meter

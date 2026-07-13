@@ -5,7 +5,7 @@ import json
 from roast_advisor import alog, report
 from roast_advisor.designer import load_target
 
-TARGET = "plans/target_city_10min.json"
+TARGET = "tests/fixtures/target_city_10min.json"
 ROAST = "data/raw/training_data/25-12-24_2052.alog"
 
 
@@ -26,7 +26,7 @@ def test_profile_score_real_roast():
 def test_advisor_score_counts_consistent(tmp_path):
     target = load_target(TARGET)
     roast = alog.load_roast(ROAST)
-    plan = json.loads(open("plans/city_10min_dtr22_plan.json").read())
+    plan = json.loads(open("tests/fixtures/city_10min_dtr22_plan.json").read())
     adv = report.advisor_score(target, plan, roast)
     assert adv["n_recommendations"] == len(adv["changes"])
     assert 0 <= adv["n_applied"] <= adv["n_recommendations"]

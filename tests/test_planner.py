@@ -15,13 +15,13 @@ def tables():
 
 @pytest.fixture(scope="module")
 def target():
-    return designer.load_target("plans/target_city_10min.json")
+    return designer.load_target("tests/fixtures/target_city_10min.json")
 
 
 def test_designer_reproduces_existing_target():
     # the checked-in target JSON was produced by the validated prototype;
     # the ported designer must rebuild the same curve
-    existing = json.loads(open("plans/target_city_10min.json").read())
+    existing = json.loads(open("tests/fixtures/target_city_10min.json").read())
     rebuilt = designer.design_target("city_10min_dtr22")
     assert rebuilt["meta"]["constraints"] == existing["meta"]["constraints"]
     assert rebuilt["meta"]["derived"]["fcs_s"] == existing["meta"]["derived"]["fcs_s"]

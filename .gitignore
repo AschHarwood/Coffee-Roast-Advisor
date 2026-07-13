@@ -33,3 +33,6 @@ prototypes/
 # Externally downloaded training data (unclear/no redistribution license) —
 # lives locally only; consented contributions go in data/raw/community/
 data/raw/external/
+
+# Personal roast plans/cue cards (generated; test fixtures live in tests/fixtures)
+plans/
