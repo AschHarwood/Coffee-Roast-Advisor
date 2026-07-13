@@ -1,0 +1,22 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Regenerable ingest outputs (cohort_labels.json stays tracked)
+data/*.parquet
+data/quality_report.csv
+outputs/__pycache__/
+.DS_Store
+
+# Personal roast-session artifacts (regenerable or private-by-default)
+reports/
+outputs/
+/*.alog
+.claude/settings.local.json

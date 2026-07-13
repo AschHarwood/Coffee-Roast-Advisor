@@ -1,0 +1,19 @@
+CUE CARD — city_10min_v2
+Preheat 300F. Charge. FCs ~7:48 @392F, DROP 10:00 @406F (DTR 22%, dev 2.2 min)
+
+  0:00        Fan 9 / Power 1   (opening block until 1:10)
+  1:10  ~164F  Fan 9 / Power 2
+  1:40  ~211F  Fan 9 / Power 4
+  1:50  ~222F  Fan 9 / Power 5
+  2:10  ~243F  Fan 9 / Power 6
+  2:20  ~253F  Fan 9 / Power 7
+  3:10  ~290F  Fan 9 / Power 8
+  3:30  ~302F  Fan 8 / Power 8
+  3:40  ~308F  Fan 8 / Power 9
+  4:00  ~319F  Fan 7 / Power 9
+  4:10  ~324F  Fan 7 / Power 8
+
+Watch points:
+  ~7:48 @392F  first crack should start
+  10:00 @406F  DROP
+If RoR runs hot at a checkpoint: power -1. If cold: power +1.

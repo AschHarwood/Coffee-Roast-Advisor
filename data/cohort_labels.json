@@ -1,0 +1,14 @@
+{
+ "0f432bf1b3564076baad5ce5c25775a4": {
+  "file": "24-03-07_1252.alog",
+  "cohort": "hot_probe",
+  "exclude": true,
+  "reason": "suspected probe cohort: FCs BT 484F vs median 394F"
+ },
+ "b6bae8e3f9bc4dd692edce4566fdbad9": {
+  "file": "24-03-11_1616.alog",
+  "cohort": "hot_probe",
+  "exclude": true,
+  "reason": "suspected probe cohort: FCs BT 494F vs median 394F"
+ }
+}

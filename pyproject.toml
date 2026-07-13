@@ -1,0 +1,39 @@
+[project]
+name = "roast-advisor"
+version = "0.1.0"
+description = "SR800 roast planner/advisor: design a target curve, generate a cue card from roast history, score roasts against the target"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "numpy>=2.0",
+    "pandas>=2.2",
+    "pyarrow>=18.0",
+    "matplotlib>=3.9",
+    "pyserial>=3.5",
+    "websockets>=16.1",
+]
+
+[project.scripts]
+ingest = "roast_advisor.cli:ingest_main"
+design = "roast_advisor.cli:design_main"
+plan = "roast_advisor.cli:plan_main"
+report = "roast_advisor.cli:report_main"
+capture = "roast_advisor.capture:capture_main"
+fakemeter = "roast_advisor.fakemeter:fakemeter_main"
+live = "roast_advisor.live:live_main"
+replay = "roast_advisor.live:replay_main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/roast_advisor"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
