@@ -64,7 +64,7 @@ Sanity checks before handing over:
 ## Hand-off
 
 Roast-day: `uv run live --target plans/target_<name>.json`, Artisan ON
-(WebSocket mode per ARTISAN_SETTINGS.md), START during preheat; charge
+(WebSocket device mode — setup in README), START during preheat; charge
 auto-detects; follow UPCOMING/NOW/ADJUST/DROP cues; mark FCs + DROP.
 After: `uv run report --target ... --roast <file>`, review, copy the .alog
 into `data/raw/training_data/`, `uv run ingest`. Log tasting notes when the

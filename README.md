@@ -40,8 +40,11 @@ want the live advisor.
 ## The live bridge (optional, roast-time)
 
 `uv run live --target plans/<target>.json` owns the meter's serial port,
-serves temps to Artisan (Config → Device → WebSocket; see
-[ARTISAN_SETTINGS.md](ARTISAN_SETTINGS.md)), and prints the advisor cues.
+serves temps to Artisan, and prints the advisor cues. One-time Artisan setup:
+Config → Device → Meter: `WebSocket`; Config → Port → WebSocket tab: host
+`127.0.0.1`, port `8765`, Input 1 Node `BT`, Input 2 Node `ET` (defaults fine
+for the rest). Switch the Meter dropdown back to your meter to run Artisan
+standalone again.
 Supporting tools, built so every layer is testable without heat:
 
 - `uv run capture` — record raw meter bytes for decoder verification
@@ -105,8 +108,7 @@ Design principles:
   pre-computed plans — no model calls, no network, reproducible transcripts.
 - **Behavior cloning over physics.** A pooled thermal model is unidentifiable
   on consistent home-roast history (power correlates with bean temp); kNN
-  over demonstrated behavior is honest and degrades gracefully. See
-  [docs/PROJECT_BRIEF.md](docs/PROJECT_BRIEF.md) for the full reasoning.
+  over demonstrated behavior is honest and degrades gracefully.
 
 ## Tests
 
@@ -121,9 +123,9 @@ charge detection within 5s, and live-vs-offline advisor determinism.
 
 ## Roadmap
 
-- Ground the curve designer in published roast science (research brief in
-  [RESEARCH_PROMPT.md](RESEARCH_PROMPT.md))
-- Community `.alog` corpus with per-rig normalization ([DATA_HUNT_PROMPT.md](DATA_HUNT_PROMPT.md))
+- Deepen the science grounding of the curve designer (an evidence-tagged
+  research brief already drives its constraints and the skill's reference)
+- Community `.alog` corpus with per-rig normalization
 - Gas drum support (Yoshan 2kg first): calibration-roast protocol, single
   "gas" control axis, longer thermal lags
 - Causal thermal model from deliberate calibration roasts (enables novel

@@ -20,3 +20,16 @@ reports/
 outputs/
 /*.alog
 .claude/settings.local.json
+
+# Project working documents — not needed to run the software
+docs/
+ARTISAN_SETTINGS.md
+RESEARCH_PROMPT.md
+DATA_HUNT_PROMPT.md
+MANIFEST.md
+manifest.csv
+prototypes/
+
+# Externally downloaded training data (unclear/no redistribution license) —
+# lives locally only; consented contributions go in data/raw/community/
+data/raw/external/

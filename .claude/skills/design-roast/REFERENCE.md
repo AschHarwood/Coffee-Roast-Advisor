@@ -1,9 +1,8 @@
 # Roast design reference
 
-Grounded in the researched knowledge brief
-([docs/ROAST_DESIGN_KNOWLEDGE_BRIEF.md](../../../docs/ROAST_DESIGN_KNOWLEDGE_BRIEF.md)
-— ~90 sources, every claim evidence-tagged). This file is the operational
-distillation; consult the brief for citations and the full argument.
+Grounded in a ~90-source, evidence-tagged research brief (July 2026); this
+file is the operational distillation. Tags: [consensus] = independent
+agreement, [contested] = credible authorities disagree.
 
 **Separation of concerns (project policy):** published knowledge decides what
 to roast; the user's archive is only the machine model. Absolute temps are

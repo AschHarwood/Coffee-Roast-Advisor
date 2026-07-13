@@ -6,7 +6,7 @@ they run against the real archive in `data/raw/training_data/` and the real
 serial captures in `tests/fixtures/`; keep it that way (no synthetic-only
 fixtures for things real files can cover).
 
-Hard-won rules — do not re-derive (full reasoning in docs/PROJECT_BRIEF.md):
+Hard-won rules — do not re-derive:
 
 - `.alog` files are Python dict literals: `ast.literal_eval`, never JSON.
   All decoding lives in `src/roast_advisor/alog.py` only — including the
