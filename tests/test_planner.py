@@ -143,3 +143,31 @@ def test_history_shape_matches_real_roast_better(tables):
         return float(np.nanmean(np.abs(r["ror"][m] - np.interp(ts, tt, rr))))
 
     assert err(shaped) < err(linear)
+
+
+def test_validate_target_passes_good_designs(tables):
+    roasts, samples = tables
+    shape = dataset.median_ror_shape(roasts, samples)
+    for tgt in (designer.design_target("ok_lin"),
+                designer.design_target("ok_shape", ror_shape=shape),
+                designer.design_target("ok_dev", ror_shape=shape, dev_time_s=105)):
+        issues = designer.validate_target(tgt)
+        assert issues["hard"] == [], issues
+
+
+def test_validate_target_rejects_underdevelopment():
+    tgt = designer.design_target("bad_dev", dev_time_s=40)
+    issues = designer.validate_target(tgt)
+    assert any("under-development" in m for m in issues["hard"])
+
+
+def test_validate_target_warns_low_drop_ror():
+    tgt = designer.design_target("low_ror", ror_at_drop=2.0)
+    issues = designer.validate_target(tgt)
+    assert any("drop RoR" in m for m in issues["soft"])
+
+
+def test_dev_time_is_primary_over_dtr():
+    tgt = designer.design_target("dev_primary", total_s=600, dtr=0.22, dev_time_s=90)
+    assert tgt["meta"]["derived"]["fcs_s"] == 510.0
+    assert abs(tgt["meta"]["constraints"]["dtr"] - 0.15) < 1e-9

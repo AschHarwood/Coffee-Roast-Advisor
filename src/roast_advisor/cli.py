@@ -20,6 +20,9 @@ def design_main():
     p = argparse.ArgumentParser(description="Design a target BT/RoR curve from constraints")
     p.add_argument("--name", required=True)
     p.add_argument("--total", type=float, default=600.0, help="total roast seconds")
+    p.add_argument("--dev", type=float, default=None,
+                   help="development time in seconds (FC->drop) — the primary "
+                        "design variable; overrides --dtr")
     p.add_argument("--dtr", type=float, default=0.22)
     p.add_argument("--fcs-bt", type=float, default=392.0)
     p.add_argument("--drop-bt", type=float, default=406.0)
@@ -47,7 +50,15 @@ def design_main():
         args.name, total_s=args.total, dtr=args.dtr, fcs_bt=args.fcs_bt,
         drop_bt=args.drop_bt, charge_bt=args.charge_bt, tp_s=args.tp,
         tp_bt=args.tp_bt, ror_at_drop=args.ror_at_drop, ror_shape=ror_shape,
+        dev_time_s=args.dev,
     )
+    issues = designer.validate_target(tgt)
+    for msg in issues["soft"]:
+        print(f"warning: {msg}")
+    if issues["hard"]:
+        for msg in issues["hard"]:
+            print(f"REJECTED: {msg}")
+        raise SystemExit(1)
     path = designer.save_target(tgt)
     d = tgt["meta"]["derived"]
     print(f"target written: {path}")

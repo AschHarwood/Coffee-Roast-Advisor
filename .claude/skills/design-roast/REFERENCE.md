@@ -1,77 +1,101 @@
 # Roast design reference
 
-**Separation of concerns (project policy):** roast-level definitions, target
-temps, and trade-offs come from PUBLISHED professional guidance (research mode
-is the primary source, fetched fresh per bean). The user's roast archive is
-used ONLY as the machine model — how settings move temperature on this rig —
-never as the standard for what a good roast is.
+Grounded in the researched knowledge brief
+([docs/ROAST_DESIGN_KNOWLEDGE_BRIEF.md](../../../docs/ROAST_DESIGN_KNOWLEDGE_BRIEF.md)
+— ~90 sources, every claim evidence-tagged). This file is the operational
+distillation; consult the brief for citations and the full argument.
 
-## Roast levels — define by crack events, not copied temps
+**Separation of concerns (project policy):** published knowledge decides what
+to roast; the user's archive is only the machine model. Absolute temps are
+machine-local calibration constants — never copied between rigs.
 
-Professional sources define level by where the drop lands relative to the
-cracks (which tracks bean color/chemistry). Dev time/DTR tunes flavor balance
-WITHIN a level; "time after FC" alone is a poor level proxy because post-FC
-RoR varies with power.
+## Evidence hierarchy — spend design freedom in this order
 
-| Level | Event definition | DTR guide |
-|---|---|---|
-| Half city (city−) | FC start heard, dropped before FC finishes | 8–14% |
-| City | shortly after FC ends | 15–20% |
-| City+ | past FC, well before any SC sign | 20–24% |
-| Full city | at the first hints/verge of second crack | 22–26% |
-| Dark / french | into rolling SC | 25%+ |
+1. **End color / roast degree** (≈ drop point relative to cracks) — dominant
+   flavor driver [consensus, peer-reviewed].
+2. **Development time after FC onset** — short = acid/fruit/sweet/clean, long
+   = bitter/astringent/roasty/nutty; body unchanged (Münchow 2020, the one
+   controlled color-matched study) [consensus]. **Design in absolute dev
+   time; DTR is derived display info** (brief §7.2).
+3. Everything else (drying length, maillard length, charge temp, RoR
+   micro-shape) is practitioner lore or below sensory threshold once color
+   and dev time are fixed — don't let it drive the design.
 
-**Translating to this rig's temps:** FCs reads ~392–397°F here. The archive
-verifies the region 398–411°F (city / city+ territory) — that is the ONLY
-temp range this probe has ever confirmed. Second crack has never been recorded
-on this rig, so full-city+ drop temps are unknown in this frame: published
-"SC ≈ 435–445°F" numbers come from other probes and must not be copied.
-For darker targets: research the bean, set a provisional drop temp a few °F
-past the verified range, and roast by ear (SC) with the live advisor — then
-the recorded roast calibrates the frame for next time.
+## Roast levels (crack-relative [consensus]; temps = priors to recalibrate)
+
+This rig: FC onset reads ~392–397°F. "Prior here" applies Sweet Maria's
+Probat-derived spacing to that anchor; verified range on this rig is only
+398–411°F — everything darker is unconfirmed until second crack is actually
+observed and logged on this machine.
+
+| Level | Crack-relative definition | Offset | Prior here |
+|---|---|---|---|
+| Half City | dropped during FC, before it completes | FC+0–5°F | ~395–400 |
+| City | at last FC sounds or just after | ~FC+13°F | ~405–410 |
+| City+ | 10s–1min after last FC pop | ~FC+20°F | ~412–417 |
+| Full City | brink of 2nd crack, before first snap | ~FC+26°F | ~418–423 |
+| Full City+ | first few snaps of 2C | ~FC+30°F | ~422–427 |
+| Vienna/French | rolling 2C and beyond | FC+36°F+ | unknown here |
+
+## Development time by level × brew (brief §8 table)
+
+| Level × brew | Dev after FC | DTR ref | Drop RoR |
+|---|---|---|---|
+| Nordic-light / filter | 1:00–1:45 | 13–18% | 6–10 |
+| City / filter (house default) | 1:15–2:00 | 15–20% | 5–10 |
+| City+ / filter | 1:30–2:30 | 17–22% | 5–8 |
+| City+ / espresso (classic) | 2:00–3:00 | 20–25% | 4–7 |
+| Full City / espresso or press | 2:15–3:15 | 20–25% | 4–6 |
+| Full City+ / press | 2:30–3:30 | 22–25% | ~4–5 |
+
+SR800 note: bias DTR toward the LOW end of each band (Rao's own small-batch /
+high burner-to-batch exception targets ~15%). Total time envelope 8–12 min,
+FC typically ~5:30–6:30 at 200–225g.
+
+## Bean-class modifiers (applied on top)
+
+| Class | Charge/preheat | Pre-FC | At FC | Development |
+|---|---|---|---|---|
+| Washed dense (SHB, >680 g/L) | baseline / +10°F | can push early | normal | per table |
+| Natural / honey | −10–20°F | gentler (scorch-prone) | normal | per table |
+| **Decaf (any method)** | **−10–15°F** | **gentler drying** | **cut heat ~10°F before expected FC — it accelerates after** | **by absolute time; total ~0.5–1 min shorter** |
+| Aged / past-crop | −10°F | less energy | normal | per table |
+
+**Decaf control rules [consensus]:** crack may be quiet (roast by temp + time
++ smell); whole-bean color is broken (ground color only); weight loss reads
+2–3 pts lower; do NOT roast darker by default — that's a myth specialists
+reject. Decaf FC temp direction is contested — calibrate per lot.
 
 ## Brew method
 
-| Brew | Lean toward | Why |
-|---|---|---|
-| Drip / pourover | city – city+ | acidity reads as flavor clarity in filter |
-| Espresso | city+ – full city, DTR 22–26%, drop RoR ~4–5 | pressure amplifies acidity; more development = balanced shots; underdeveloped espresso is sour |
-| French press / cold brew | full city | body carries; brightness is muted anyway |
+Classic school: espresso = one level darker + upper development band
+(under-development reads sour under pressure); filter = City–City+, middle
+band; french press = Full City ±, upper band. **Modern-light-espresso toggle**
+[contested]: with good grinders, filter-style light roasts work as espresso —
+if the user identifies with that style, drop the espresso offset. Ask once.
 
-## Trade-offs to narrate while setting constraints
+## Open questions → present as user choices (brief §7)
 
-- **Total time**: shorter (≤9 min) = brighter, lighter body, riskier control;
-  longer (≥11 min) = heavier body but baked/flat risk if RoR stalls. History
-  sweet spot: 9:30–10:30.
-- **DTR / finish**: raising drop temp at fixed time deepens roast character;
-  raising DTR at fixed drop temp trades acidity for sweetness/roundness.
-- **Ramp**: the machine's RoR shape is measured from history (rebound spike →
-  steep decay) — the designer handles it. The lever the user actually chooses
-  is total time + FCs timing, not the ramp shape itself.
-- **Drop RoR**: 5 F/min default; pushing below ~4 flattens the cup (Rao floor),
-  above ~7 risks the late flick and overshooting the drop temp.
+- Smooth-RoR-through-FC enforcement: default ON, label it "Rao doctrine,
+  contested" — the peer-reviewed view is it may not matter at matched color.
+- DTR ratio vs absolute dev time: we design in absolute time (decided).
+- Espresso offset: classic vs modern-light (toggle above).
+- Decaf FC temp direction: learn per lot from their logs.
 
-## Decaf notes (most of this history is decaf)
+## Hard constraints
 
-- Process (SWP/MC) pre-browns the bean: color is useless for judging level —
-  go by temp and time only.
-- First crack is quiet or inaudible: user assumes FCs at ~395 on this rig and
-  marks it manually; treat the FCs mark as ±30s soft.
-- Decafs run ~faster and roast darker at the same BT: when a supplier
-  recommendation is for the non-decaf version, ease the drop temp down ~2–4°F.
+Enforced in code — `designer.validate_target()` rejects: stalls (RoR ≤ 0),
+sustained near-stall before FC (< 2.5°F/min for > 60s), under-development
+(< 60s or < 8% of total), and warns on drop RoR < 4. Don't hand a plan to the
+user if validation failed.
 
-## Research playbook
+## SR800 machine notes [community consensus]
 
-Search patterns: `<origin> <region> <process> roast profile`,
-`<bean name> sweet marias`, `roasting <origin> decaf`. Supplier product pages
-(Sweet Maria's, Happy Mule, Burman, Genuine Origin) publish roast level
-recommendations and cupping notes — the most actionable sources.
-
-Translate supplier language: "City+ recommended" → the table above; "shines
-darker" → full city candidate; "delicate florals" → half city/city candidate;
-dense high-grown (SHB/SHG, >1500m) tolerates faster ramps and darker levels;
-low-grown/aged/monsooned beans prefer gentler, shorter roasts.
-
-Deliverable: 2–3 named candidates spanning the plausible range, e.g.
-`ethiopia_city_945`, `ethiopia_cityplus_1030` — design all, A/B across
-sessions, and let `report` + tasting notes pick the winner.
+- Fan is a HEAT lever: lowering fan traps hot air and raises BT/RoR. Sweet
+  Maria's doctrine is heat high (7–9), profile with fan. (The kNN clones the
+  user's own power-ramp style — both work; know which frame you're in when
+  explaining.)
+- Small batches roast SLOWER (less mass trapping heat) and can stall pre-FC.
+- No drum mass: expect to carry/raise heat input approaching FC or the RoR
+  crashes (air-roaster adaptation of Rao).
+- True "baking" is hard to achieve in a FreshRoast (SM) — don't over-warn.

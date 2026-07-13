@@ -55,14 +55,21 @@ def design_target(
     ror_at_drop=5.0,
     description="",
     ror_shape=None,
+    dev_time_s=None,
 ):
     """Build the target curve dict (same schema as plans/target_city_10min.json).
+
+    dev_time_s: development time (FC onset -> drop) in seconds. This is the
+    PRIMARY design variable per the knowledge brief (controlled evidence backs
+    absolute dev time; DTR is derived display info). If omitted, dtr is used.
 
     ror_shape: optional (u_grid, shape) from dataset.median_ror_shape() — the
     machine's measured main-phase RoR profile. Without it the main phase is a
     linear RoR decline, which no real probe produces (RoR is ~0 at the turning
     point and rebounds violently); prefer the measured shape for real roasts.
     """
+    if dev_time_s is not None:
+        dtr = dev_time_s / total_s
     fcs_s = total_s * (1 - dtr)
     dev_min = (total_s - fcs_s) / 60
     # development: linear RoR from r_fcs down to ror_at_drop, integrating to (drop-fcs) BT
@@ -131,6 +138,68 @@ def design_target(
             "ror": [round(ror(t), 2) if ror(t) is not None else None for t in ts],
         },
     }
+
+
+# Hard-constraint thresholds from the knowledge brief §8 (all [consensus])
+STALL_ROR = 0.0
+NEAR_STALL_ROR = 2.5      # F/min sustained below this pre-FC = bake risk
+NEAR_STALL_MAX_S = 60.0
+MIN_DEV_S = 60.0
+MIN_DEV_FRACTION = 0.08
+SOFT_MIN_DROP_ROR = 4.0   # below this is contested anti-"baked" lore -> warn
+
+
+def validate_target(target):
+    """Check a designed curve against the brief's encodable constraints.
+
+    Returns {"hard": [...], "soft": [...]} — hard violations mean the curve
+    should not be handed to the user; soft ones are contested-doctrine
+    warnings to surface alongside the plan.
+    """
+    import numpy as np
+
+    con, der = target["meta"]["constraints"], target["meta"]["derived"]
+    c = target["curve"]
+    t = np.asarray(c["t"], dtype=float)
+    ror = np.asarray(
+        [np.nan if v is None else v for v in c["ror"]], dtype=float
+    )
+    fcs_s, total_s = der["fcs_s"], con["total_s"]
+    main = (t > con["tp_s"]) & (t <= total_s)
+    hard, soft = [], []
+
+    if np.nanmin(ror[main]) <= STALL_ROR:
+        hard.append("stall: target RoR <= 0 between turning point and drop")
+
+    pre_fc = main & (t < fcs_s)
+    slow = ror[pre_fc] < NEAR_STALL_ROR
+    if slow.any():
+        # longest consecutive run of near-stall samples (2s grid)
+        run = max_run = 0
+        for flag in slow:
+            run = run + 1 if flag else 0
+            max_run = max(max_run, run)
+        step = float(np.median(np.diff(t)))
+        if max_run * step > NEAR_STALL_MAX_S:
+            hard.append(
+                f"near-stall: RoR < {NEAR_STALL_ROR} F/min for "
+                f">{NEAR_STALL_MAX_S:.0f}s before FC (bake risk)"
+            )
+
+    dev_s = total_s - fcs_s
+    if dev_s < MIN_DEV_S or dev_s / total_s < MIN_DEV_FRACTION:
+        hard.append(
+            f"under-development: {dev_s:.0f}s after FC "
+            f"(minimum {MIN_DEV_S:.0f}s and {MIN_DEV_FRACTION:.0%} of total)"
+        )
+
+    if con["ror_at_drop"] < SOFT_MIN_DROP_ROR:
+        soft.append(
+            f"drop RoR {con['ror_at_drop']} < {SOFT_MIN_DROP_ROR} F/min "
+            "(contested anti-baked heuristic)"
+        )
+
+    return {"hard": hard, "soft": soft}
 
 
 def load_target(path):

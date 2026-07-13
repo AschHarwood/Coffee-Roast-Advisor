@@ -37,10 +37,18 @@ character), ramp (see reference).
 
 ## Design (all modes end here)
 
+Choose **absolute development time** (`--dev`, seconds) from REFERENCE.md's
+level×brew table — it's the evidence-backed primary variable; DTR is derived
+display info. On the SR800, bias toward the LOW end of each band.
+
 ```bash
-uv run design --name <name> --total <s> --dtr <x> --fcs-bt <F> --drop-bt <F>
+uv run design --name <name> --total <s> --dev <s> --fcs-bt <F> --drop-bt <F>
 uv run plan --target plans/target_<name>.json
 ```
+
+`design` enforces the brief's hard constraints (stall, pre-FC near-stall,
+under-development) and prints contested-doctrine warnings — surface both to
+the user rather than silently retrying.
 
 Design uses the history-median RoR shape by default (`--shape linear` only for
 comparisons). If parquet is missing: `uv run ingest` first.
