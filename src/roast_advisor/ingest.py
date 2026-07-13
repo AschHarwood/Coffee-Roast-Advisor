@@ -26,7 +26,21 @@ def scan_files(raw_dir):
     return sorted(Path(raw_dir).rglob("*.alog"))
 
 
-def roast_row(r):
+def machine_tag(path, raw_dir):
+    """Machine class from folder layout: training_data/ is the author's sr800;
+    external/<source>/ and community/<handle>/ are tagged by that folder name."""
+    try:
+        parts = Path(path).relative_to(raw_dir).parts
+    except ValueError:
+        return "unknown"
+    if parts[0] == "training_data":
+        return "sr800"
+    if parts[0] in ("external", "community") and len(parts) > 2:
+        return parts[1]
+    return parts[0] if len(parts) > 1 else "unknown"
+
+
+def roast_row(r, machine="sr800"):
     total = r["drop_t"]
     dtr = (total - r["fcs_t"]) / total if r["fcs_t"] and total else None
     t = r["t"]
@@ -42,7 +56,7 @@ def roast_row(r):
         "weight_out_g": r["weight_out_g"],
         "ambient_temp": r["ambient_temp"],
         "ambient_humidity": r["ambient_humidity"],
-        "machine": "sr800",
+        "machine": machine,
         "charge_method": r["charge_method"],
         "tp_t": r["tp_t"],
         "tp_bt": r["tp_bt"],
@@ -91,9 +105,12 @@ def event_rows(r):
 
 def flag_cohorts(roasts, labels_path=DATA_DIR / "cohort_labels.json"):
     """Add exclude/cohort columns; suspected outliers excluded unless overridden."""
-    marked = roasts["fcs_bt"].dropna()
-    median_fcs = marked.median()
-    suspected = (roasts["fcs_bt"] - median_fcs).abs() > COHORT_OUTLIER_F
+    # probe frames differ by machine: outliers are judged against the
+    # median of the SAME machine class, and only where the class has enough
+    # marked roasts for a stable median
+    med = roasts.groupby("machine")["fcs_bt"].transform("median")
+    n_marked = roasts.groupby("machine")["fcs_bt"].transform("count")
+    suspected = ((roasts["fcs_bt"] - med).abs() > COHORT_OUTLIER_F) & (n_marked >= 5)
     suspected = suspected.fillna(False)
 
     labels = {}
@@ -111,7 +128,8 @@ def flag_cohorts(roasts, labels_path=DATA_DIR / "cohort_labels.json"):
         elif is_suspect:
             exclude.append(True)
             reason.append(
-                f"suspected probe cohort: FCs BT {row['fcs_bt']:.0f}F vs median {median_fcs:.0f}F"
+                f"suspected probe cohort: FCs BT {row['fcs_bt']:.0f}F vs "
+                f"{row['machine']} median {med.loc[row.name]:.0f}F"
             )
         else:
             exclude.append(False)
@@ -120,7 +138,6 @@ def flag_cohorts(roasts, labels_path=DATA_DIR / "cohort_labels.json"):
     roasts["cohort"] = cohort
     roasts["exclude"] = exclude
     roasts["exclude_reason"] = reason
-    roasts.attrs["median_fcs_bt"] = median_fcs
 
     if not labels_path.exists():
         seed = {
@@ -151,11 +168,17 @@ def run(raw_dir="data/raw", data_dir=DATA_DIR):
     data_dir = Path(data_dir)
     data_dir.mkdir(exist_ok=True)
     files = scan_files(raw_dir)
-    parsed, failed = [], []
+    parsed, failed, skipped = [], [], []
+    seen_uuids = set()
     all_samples, all_events = [], []
     for path in files:
         try:
             r = alog.load_roast(path)
+            if r["uuid"] in seen_uuids:
+                skipped.append((path.name, "duplicate roastUUID (same roast, another file)"))
+                continue
+            seen_uuids.add(r["uuid"])
+            r["_machine"] = machine_tag(path, raw_dir)
             parsed.append(r)
             all_samples.append(sample_rows(r))
             ev = event_rows(r)
@@ -164,7 +187,7 @@ def run(raw_dir="data/raw", data_dir=DATA_DIR):
         except Exception as e:  # a corrupt file must not sink the whole ingest
             failed.append((path.name, f"{type(e).__name__}: {e}"))
 
-    roasts = pd.DataFrame([roast_row(r) for r in parsed])
+    roasts = pd.DataFrame([roast_row(r, r["_machine"]) for r in parsed])
     roasts = flag_cohorts(roasts, data_dir / "cohort_labels.json")
     roasts = upsert(roasts, data_dir / "roasts.parquet")
     samples = upsert(pd.concat(all_samples, ignore_index=True), data_dir / "samples.parquet")
@@ -174,6 +197,7 @@ def run(raw_dir="data/raw", data_dir=DATA_DIR):
         "samples": samples,
         "events": events,
         "failed": failed,
+        "skipped": skipped,
         "n_files": len(files),
     }
 
@@ -184,14 +208,19 @@ def quality_report(result):
     lines = []
     lines.append(
         f"INGEST: {result['n_files']} files scanned, "
-        f"{len(roasts)} roasts in dataset, {len(result['failed'])} failed to parse"
+        f"{len(roasts)} roasts in dataset, {len(result['failed'])} rejected, "
+        f"{len(result.get('skipped', []))} duplicates skipped"
     )
     for name, err in result["failed"]:
-        lines.append(f"  PARSE FAILED: {name}: {err}")
-    median_fcs = roasts["fcs_bt"].dropna().median()
-    lines.append(f"FCs BT median across archive: {median_fcs:.0f}F (outlier threshold +/-{COHORT_OUTLIER_F:.0f}F)")
+        lines.append(f"  REJECTED: {name}: {err}")
+    for name, why in result.get("skipped", []):
+        lines.append(f"  SKIPPED: {name}: {why}")
+    by_machine = roasts.groupby("machine")["fcs_bt"].median()
+    lines.append("FCs BT median by machine (F, outliers judged within machine): "
+                 + ", ".join(f"{m}={v:.0f}" for m, v in by_machine.dropna().items()))
     lines.append("")
-    hdr = f"{'file':<48} {'date':<10} {'charge':<12} {'FCs':>7} {'DROP':>7} {'ev':>3} {'cohort':<9} excluded"
+    hdr = (f"{'file':<48} {'machine':<22} {'date':<10} {'charge':<12} "
+           f"{'FCs':>7} {'DROP':>7} {'ev':>3} {'cohort':<9} excluded")
     lines.append(hdr)
     lines.append("-" * len(hdr))
     for _, r in roasts.iterrows():
@@ -199,8 +228,9 @@ def quality_report(result):
         drop = "-" if not r["drop_marked"] else f"{r['drop_t']/60:.1f}m"
         excl = f"YES: {r['exclude_reason']}" if r["exclude"] else ""
         lines.append(
-            f"{r['file']:<48} {str(r['date'])[:10]:<10} {r['charge_method']:<12} "
-            f"{fcs:>7} {drop:>7} {r['n_events']:>3} {r['cohort']:<9} {excl}"
+            f"{r['file']:<48} {r['machine']:<22} {str(r['date'])[:10]:<10} "
+            f"{r['charge_method']:<12} {fcs:>7} {drop:>7} {r['n_events']:>3} "
+            f"{r['cohort']:<9} {excl}"
         )
     lines.append("")
     n = len(roasts)
@@ -214,8 +244,11 @@ def quality_report(result):
     lines.append(f"  no fan/power events (unusable for planning): {(roasts['n_events']==0).sum()}")
     lines.append(f"  excluded from modeling: {roasts['exclude'].sum()} "
                  f"({', '.join(roasts.loc[roasts['exclude'],'file'])})")
-    lines.append(f"  usable for kNN planning: "
-                 f"{((~roasts['exclude']) & (roasts['n_events']>0)).sum()}")
+    lines.append("  roasts by machine: " + ", ".join(
+        f"{m}={n}" for m, n in roasts["machine"].value_counts().items()))
+    sr = roasts[roasts["machine"] == "sr800"]
+    lines.append(f"  usable for sr800 kNN planning: "
+                 f"{((~sr['exclude']) & (sr['n_events']>0)).sum()}")
     report = "\n".join(lines)
     csv_path = DATA_DIR / "quality_report.csv"
     roasts.to_csv(csv_path, index=False)

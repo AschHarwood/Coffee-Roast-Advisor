@@ -3,13 +3,13 @@ Preheat 300F. Charge. FCs ~7:48 @392F, DROP 10:00 @406F (DTR 22%, dev 2.2 min)
 
   0:00        Fan 9 / Power 1   (opening block until 1:10)
   1:10  ~161F  Fan 9 / Power 2
-  2:00  ~210F  Fan 9 / Power 3
+  1:40  ~191F  Fan 9 / Power 3
   2:30  ~236F  Fan 9 / Power 4
   2:40  ~245F  Fan 9 / Power 5
   3:00  ~261F  Fan 9 / Power 6
   3:20  ~276F  Fan 9 / Power 7
   3:30  ~283F  Fan 9 / Power 8
-  3:50  ~297F  Fan 8 / Power 8
+  3:40  ~290F  Fan 8 / Power 8
   4:00  ~304F  Fan 8 / Power 9
   5:10  ~343F  Fan 7 / Power 9
   6:40  ~378F  Fan 7 / Power 8

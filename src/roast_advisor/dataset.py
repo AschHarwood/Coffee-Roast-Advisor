@@ -16,8 +16,11 @@ def load_tables(data_dir="data"):
     return roasts, samples
 
 
-def included_uuids(roasts, exclude_uuids=()):
-    ok = roasts[(~roasts["exclude"]) & (roasts["n_events"] > 0)]
+def included_uuids(roasts, exclude_uuids=(), machine="sr800"):
+    ok = roasts[
+        (~roasts["exclude"]) & (roasts["n_events"] > 0)
+        & (roasts["machine"] == machine)
+    ]
     return [u for u in ok["roastUUID"] if u not in set(exclude_uuids)]
 
 
@@ -32,6 +35,7 @@ def median_ror_shape(roasts, samples, n_points=41):
     """
     ok = roasts[
         (~roasts["exclude"]) & roasts["fcs_t"].notna() & roasts["tp_t"].notna()
+        & (roasts["machine"] == "sr800")
     ]
     u_grid = np.linspace(0, 1, n_points)
     profiles = []
@@ -51,12 +55,15 @@ def median_ror_shape(roasts, samples, n_points=41):
     return u_grid, np.clip(shape, 0, None)
 
 
-def knn_training_samples(roasts, samples, exclude_uuids=()):
+def knn_training_samples(roasts, samples, exclude_uuids=(), machine="sr800"):
     """(BT, RoR, fan, power) rows from cohort-consistent roasts, every 10s.
 
-    exclude_uuids additionally holds out roasts (used by leave-one-out replay).
+    Single-machine by design: settings semantics don't transfer across
+    machine classes. exclude_uuids additionally holds out roasts (LOO replay).
     """
-    keep = samples[samples["roastUUID"].isin(included_uuids(roasts, exclude_uuids))]
+    keep = samples[
+        samples["roastUUID"].isin(included_uuids(roasts, exclude_uuids, machine))
+    ]
     rows = []
     for _, g in keep.groupby("roastUUID"):
         g = g.sort_values("t")

@@ -113,7 +113,16 @@ def load_roast(path):
     t = np.asarray(d["timex"], dtype=float)
     bt = np.asarray(d["temp2"], dtype=float)
     et = np.asarray(d["temp1"], dtype=float)
+    mode_original = d.get("mode", "F")
+    if mode_original == "C":
+        # normalize to F so every threshold and model shares one scale;
+        # non-positive values are no-reading sentinels, never temperatures
+        bt = np.where(bt > 0, bt * 9 / 5 + 32, bt)
+        et = np.where(et > 0, et * 9 / 5 + 32, et)
     ti = d.get("timeindex", [-1, 0, 0, 0, 0, 0, 0, 0])
+
+    if len(t) < 5 or not (bt > 0).any():
+        raise ValueError("empty or probe-less recording (no valid BT samples)")
 
     if ti[0] > -1:
         charge, charge_method = float(t[ti[0]]), "marked"
@@ -172,7 +181,8 @@ def load_roast(path):
         "beans": d.get("beans", ""),
         "date": d.get("roastisodate", ""),
         "epoch": d.get("roastepoch"),
-        "mode": d.get("mode", "F"),
+        "mode": "F",  # temps always normalized to F on load
+        "mode_original": mode_original,
         "weight_in_g": float(weight[0]) * to_g,
         "weight_out_g": float(weight[1]) * to_g,
         "ambient_temp": d.get("ambientTemp"),

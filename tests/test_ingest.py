@@ -28,8 +28,14 @@ def result(tmp_data, module_mocker=None):
 
 def test_all_files_ingested(result):
     assert result["n_files"] >= 62  # the archive grows with every roast
-    assert len(result["failed"]) == 0
-    assert len(result["roasts"]) == result["n_files"]
+    # the author's own sr800 archive must always parse cleanly; external
+    # community files may legitimately be rejected (empty/aborted recordings)
+    sr_files = {p.name for p in __import__("pathlib").Path("data/raw/training_data").glob("*.alog")}
+    assert not [f for f, _ in result["failed"] if f in sr_files]
+    sr = result["roasts"][result["roasts"]["machine"] == "sr800"]
+    assert len(sr) >= 62
+    accounted = len(result["roasts"]) + len(result["failed"]) + len(result["skipped"])
+    assert accounted == result["n_files"]
     assert result["roasts"]["roastUUID"].is_unique
 
 
@@ -37,8 +43,9 @@ def test_hot_probe_cohort_auto_excluded(result):
     roasts = result["roasts"]
     excluded = set(roasts.loc[roasts["exclude"], "file"])
     assert HOT_COHORT_FILES <= excluded
-    # and nothing in the main cohort got swept up with them
-    flagged_hot = set(roasts.loc[roasts["cohort"] == "hot_probe", "file"])
+    # and nothing else in the sr800 cohort got swept up with them
+    sr = roasts[roasts["machine"] == "sr800"]
+    flagged_hot = set(sr.loc[sr["cohort"] == "hot_probe", "file"])
     assert flagged_hot == HOT_COHORT_FILES
 
 
@@ -46,8 +53,11 @@ def test_samples_have_settings_and_phases(result):
     s = result["samples"]
     assert {"roastUUID", "t", "bt", "ror", "fan", "power", "phase"} <= set(s.columns)
     assert set(s["phase"].unique()) <= {"drying", "maillard", "development"}
-    # forward-filled settings exist for the bulk of mid-roast samples
-    mid = s[(s["t"] > 90)]
+    # forward-filled settings exist for the bulk of the author's mid-roast
+    # samples (external archives may have event-less roasts)
+    roasts = result["roasts"]
+    sr_ids = roasts.loc[roasts["machine"] == "sr800", "roastUUID"]
+    mid = s[(s["t"] > 90) & s["roastUUID"].isin(sr_ids)]
     assert mid["power"].notna().mean() > 0.7
 
 
@@ -67,6 +77,6 @@ def test_rerun_is_idempotent(tmp_data, result):
 
 def test_quality_report_renders(result):
     text = ingest.quality_report(result)
-    assert "usable for kNN planning" in text
+    assert "usable for sr800 kNN planning" in text
     for f in HOT_COHORT_FILES:
         assert f in text
